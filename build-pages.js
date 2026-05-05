@@ -6,26 +6,51 @@ var path = require('path');
 var root = __dirname;
 var styleDir = path.join(root, 'styles');
 
+function normalizeBasePath(input) {
+  var value = (input || '/').trim();
+  if (!value) value = '/';
+  if (value.charAt(0) !== '/') value = '/' + value;
+  if (value.length > 1 && value.endsWith('/')) value = value.slice(0, -1);
+  return value;
+}
+
+var siteBase = normalizeBasePath(process.env.SITE_BASE || '/betterengineer');
+
+function withBase(urlPath) {
+  if (!urlPath || urlPath.charAt(0) !== '/') return urlPath;
+  if (siteBase === '/') return urlPath;
+  return siteBase + urlPath;
+}
+
+function normalizeHtmlPaths(html) {
+  return html
+    .replace(/(src|href)=["']\.\/([^"']*)["']/g, '$1="/$2"')
+    .replace(/srcset=["']\.\/([^"']*)["']/g, 'srcset="/$1"')
+    .replace(/href=["']\/react\.html["']/g, 'href="/technologies/react/"')
+    .replace(/href=["']\/index\.html["']/g, 'href="/"')
+    .replace(/href=["']\/["']/g, 'href="/"');
+}
+
+function applyBaseToHtml(html) {
+  return html
+    .replace(/(src|href)=["']\/(?!\/)([^"']*)["']/g, function (_, attr, value) {
+      return attr + '="' + withBase('/' + value) + '"';
+    })
+    .replace(/srcset=["']\/(?!\/)([^"']*)["']/g, function (_, value) {
+      return 'srcset="' + withBase('/' + value) + '"';
+    });
+}
+
+function applyBaseToCss(css) {
+  return css.replace(/url\((["'])\/(?!\/)([^"')]+)\1\)/g, function (_, quote, value) {
+    return 'url(' + quote + withBase('/' + value) + quote + ')';
+  });
+}
+
 function fixUrls(css) {
   return css
-    .replace(/url\("\/images\//g, 'url("/images/')
-    .replace(/url\('\/images\//g, "url('/images/");
-}
-
-function absolutizeHtmlPaths(html) {
-  return html
-    .replace(/(src|href)=["']\.\/images\//g, '$1="/images/')
-    .replace(/(src|href)=["']\.\/icons\//g, '$1="/icons/')
-    .replace(/srcset=["']\.\/images\//g, 'srcset="/images/')
-    .replace(/href=["']\.\/react\.html["']/g, 'href="/technologies/react/"')
-    .replace(/href=["']\.\/index\.html["']/g, 'href="/"')
-    .replace(/href=["']\.\/["']/g, 'href="/"');
-}
-
-function writeFileSafe(relPath, contents) {
-  var absPath = path.join(root, relPath);
-  fs.mkdirSync(path.dirname(absPath), { recursive: true });
-  fs.writeFileSync(absPath, contents, 'utf8');
+    .replace(/url\("\.\/images\//g, 'url("/images/')
+    .replace(/url\('\.\/images\//g, "url('/images/");
 }
 
 function readStyles() {
@@ -40,13 +65,19 @@ function readStyles() {
     process.exit(1);
   }
   return {
-    brand: fixUrls(fs.readFileSync(brandPath, 'utf8')),
-    reactExtra: fs.readFileSync(reactPath, 'utf8'),
+    brand: applyBaseToCss(fixUrls(fs.readFileSync(brandPath, 'utf8'))),
+    reactExtra: applyBaseToCss(fixUrls(fs.readFileSync(reactPath, 'utf8'))),
   };
 }
 
 function readFileSafe(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
+}
+
+function writeFileSafe(relPath, contents) {
+  var absPath = path.join(root, relPath);
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, contents, 'utf8');
 }
 
 var styles = readStyles();
@@ -56,16 +87,16 @@ if (!fs.existsSync(reactMainPath)) {
   console.error('Missing main-react.html (React landing <main> fragment).');
   process.exit(1);
 }
-var reactMain = absolutizeHtmlPaths(fs.readFileSync(reactMainPath, 'utf8').trim());
+var reactMain = normalizeHtmlPaths(fs.readFileSync(reactMainPath, 'utf8').trim());
 
-var mainHome = absolutizeHtmlPaths(readFileSafe('main-home.html').trim());
-var footer = absolutizeHtmlPaths(readFileSafe('footer-full.html').trim());
+var mainHome = normalizeHtmlPaths(readFileSafe('main-home.html').trim());
+var footer = normalizeHtmlPaths(readFileSafe('footer-full.html').trim());
 
 var headerHome =
   '  <header class="site-header" id="header">\n' +
   '    <div class="header-inner">\n' +
-  '      <a class="logo-link" href="/" aria-label="BetterEngineer home">\n' +
-  '        <img src="/icons/betterengineer-logo.svg" width="183" height="33" alt="BetterEngineer">\n' +
+  '      <a class="logo-link" href="./" aria-label="BetterEngineer home">\n' +
+  '        <img src="./icons/betterengineer-logo.svg" width="183" height="33" alt="BetterEngineer">\n' +
   '      </a>\n' +
   '      <nav class="site-nav" aria-label="Primary">\n' +
   '        <ul class="nav-desktop">\n' +
@@ -76,7 +107,7 @@ var headerHome =
   '              <li><a href="https://www.betterengineer.com/ai-readiness">AI Readiness</a></li>\n' +
   '            </ul>\n' +
   '          </li>\n' +
-  '          <li><a href="/technologies/react/">React</a></li>\n' +
+  '          <li><a href="./react.html">React</a></li>\n' +
   '          <li><a href="https://www.betterengineer.com/hiring-dashboard">Platform</a></li>\n' +
   '          <li>\n' +
   '            <a href="https://www.betterengineer.com/about">About <span aria-hidden="true">▾</span></a>\n' +
@@ -105,8 +136,8 @@ var headerHome =
   '      </button>\n' +
   '    </div>\n' +
   '    <div class="nav-mobile" id="mobile-menu">\n' +
-  '      <a href="/" class="is-active" aria-current="page">Home</a>\n' +
-  '      <a href="/technologies/react/">React</a>\n' +
+  '      <a href="./" class="is-active" aria-current="page">Home</a>\n' +
+  '      <a href="./react.html">React</a>\n' +
   '      <a href="https://www.betterengineer.com/staff-augmentation">Staff Augmentation</a>\n' +
   '      <a href="https://www.betterengineer.com/ai-readiness">AI Readiness</a>\n' +
   '      <a href="https://www.betterengineer.com/hiring-dashboard">Platform</a>\n' +
@@ -119,8 +150,8 @@ var headerHome =
 var headerReact =
   '  <header class="site-header" id="header">\n' +
   '    <div class="header-inner">\n' +
-  '      <a class="logo-link" href="/" aria-label="BetterEngineer home">\n' +
-  '        <img src="/icons/betterengineer-logo.svg" width="183" height="33" alt="BetterEngineer">\n' +
+  '      <a class="logo-link" href="./" aria-label="BetterEngineer home">\n' +
+  '        <img src="./icons/betterengineer-logo.svg" width="183" height="33" alt="BetterEngineer">\n' +
   '      </a>\n' +
   '      <nav class="site-nav" aria-label="Primary">\n' +
   '        <ul class="nav-desktop">\n' +
@@ -131,7 +162,7 @@ var headerReact =
   '              <li><a href="https://www.betterengineer.com/ai-readiness">AI Readiness</a></li>\n' +
   '            </ul>\n' +
   '          </li>\n' +
-  '          <li><a href="/technologies/react/" class="is-active" aria-current="page">React</a></li>\n' +
+  '          <li><a href="./react.html" class="is-active" aria-current="page">React</a></li>\n' +
   '          <li><a href="https://www.betterengineer.com/hiring-dashboard">Platform</a></li>\n' +
   '          <li>\n' +
   '            <a href="https://www.betterengineer.com/about">About <span aria-hidden="true">▾</span></a>\n' +
@@ -160,8 +191,8 @@ var headerReact =
   '      </button>\n' +
   '    </div>\n' +
   '    <div class="nav-mobile" id="mobile-menu">\n' +
-  '      <a href="/">Home</a>\n' +
-  '      <a href="/technologies/react/" class="is-active">React</a>\n' +
+  '      <a href="./">Home</a>\n' +
+  '      <a href="./react.html" class="is-active">React</a>\n' +
   '      <a href="https://www.betterengineer.com/staff-augmentation">Staff Augmentation</a>\n' +
   '      <a href="https://www.betterengineer.com/ai-readiness">AI Readiness</a>\n' +
   '      <a href="https://www.betterengineer.com/hiring-dashboard">Platform</a>\n' +
@@ -172,7 +203,7 @@ var headerReact =
   '  </header>\n';
 
 function shell(title, description, css, header, main, scriptName) {
-  return (
+  var html =
     '<!DOCTYPE html>\n' +
     '<html lang="en">\n' +
     '<head>\n' +
@@ -184,7 +215,7 @@ function shell(title, description, css, header, main, scriptName) {
     '  <meta name="description" content="' +
     description.replace(/"/g, '&quot;') +
     '">\n' +
-    '  <link rel="icon" href="/icons/favicon.png" type="image/png">\n' +
+    '  <link rel="icon" href="./icons/favicon.png" type="image/png">\n' +
     '  <link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">\n' +
@@ -203,12 +234,12 @@ function shell(title, description, css, header, main, scriptName) {
     '\n' +
     footer +
     '\n' +
-    '  <script src="/' +
+    '  <script src="./' +
     scriptName +
     '" defer></script>\n' +
     '</body>\n' +
-    '</html>\n'
-  );
+    '</html>\n';
+  return applyBaseToHtml(normalizeHtmlPaths(html));
 }
 
 var homeCss =
@@ -238,6 +269,5 @@ var reactHtml = shell(
 writeFileSafe('index.html', indexHtml);
 writeFileSafe(path.join('technologies', 'react', 'index.html'), reactHtml);
 writeFileSafe('react.html', reactHtml);
-writeFileSafe('CNAME', 'lp.betterengineer.com\n');
 writeFileSafe('.nojekyll', '');
-console.log('Wrote index.html and technologies/react/index.html with inlined CSS, plus CNAME/.nojekyll.');
+console.log('Wrote GitHub Pages build with base path:', siteBase);
