@@ -35,13 +35,12 @@ function readFileSafe(rel) {
 
 var styles = readStyles();
 
-var oldIndex = readFileSafe('index.html');
-var mainMatch = oldIndex.match(/<main id="main">([\s\S]*?)<\/main>/);
-if (!mainMatch) {
-  console.error('Could not extract <main> from index.html');
+var reactMainPath = path.join(root, 'main-react.html');
+if (!fs.existsSync(reactMainPath)) {
+  console.error('Missing main-react.html (React landing <main> fragment).');
   process.exit(1);
 }
-var reactMain = '<main id="main">' + mainMatch[1] + '</main>';
+var reactMain = fs.readFileSync(reactMainPath, 'utf8').trim();
 
 var mainHome = readFileSafe('main-home.html').trim();
 var footer = readFileSafe('footer-full.html').trim();
