@@ -158,4 +158,38 @@
       dustWrap.querySelectorAll('.fairy-dust-particle').forEach(removeParticle);
     });
   }
+
+  var HS_TARGET_ID = 'hubspot-form-72hr';
+  function mountHubSpot72() {
+    var el = document.getElementById(HS_TARGET_ID);
+    if (!el || !window.hbspt) return;
+    if (el.getAttribute('data-hs-injected')) return;
+    el.setAttribute('data-hs-injected', 'true');
+    window.hbspt.forms.create({
+      region: 'na1',
+      portalId: '8679235',
+      formId: '4431ddc0-7bea-46ba-939c-98c422756479',
+      target: '#' + HS_TARGET_ID,
+    });
+  }
+  var hsSrc = 'https://js.hsforms.net/forms/embed/v2.js';
+  var hsScript = document.querySelector('script[src="' + hsSrc + '"]');
+  if (document.getElementById(HS_TARGET_ID)) {
+    if (!hsScript) {
+      hsScript = document.createElement('script');
+      hsScript.src = hsSrc;
+      hsScript.charset = 'utf-8';
+      hsScript.async = true;
+      hsScript.onload = function () {
+        requestAnimationFrame(mountHubSpot72);
+      };
+      document.body.appendChild(hsScript);
+    } else if (window.hbspt) {
+      requestAnimationFrame(mountHubSpot72);
+    } else {
+      hsScript.addEventListener('load', function () {
+        requestAnimationFrame(mountHubSpot72);
+      }, { once: true });
+    }
+  }
 })();

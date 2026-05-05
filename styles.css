@@ -462,12 +462,12 @@
     .stats-bento__photo--abstract {
       grid-column: 5 / span 8;
       grid-row: 1;
-      background: url("./images/backgrounds/stats-abstract.png") center / cover no-repeat;
+      background: url("/images/backgrounds/stats-abstract.png") center / cover no-repeat;
     }
     .stats-bento__photo--office {
       grid-column: 1 / span 4;
       grid-row: 2;
-      background: url("./images/backgrounds/office-work.jpg") center / cover no-repeat;
+      background: url("/images/backgrounds/office-work.jpg") center / cover no-repeat;
     }
     .stats-bento__stat--a {
       background: rgb(134, 137, 227);
@@ -856,7 +856,6 @@
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1; transform: none; transition: none; }
     }
-
 /* React landing page — extends brand.css */
 
 .nav-desktop a.is-active {
@@ -898,6 +897,28 @@
   background: #5b21b6;
   border-color: #5b21b6;
   box-shadow: 0 6px 20px rgba(91, 33, 182, 0.32);
+}
+
+/* HubSpot embed test block */
+.hubspot-form-card {
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 2rem;
+}
+
+.hubspot-test-intro .lead a {
+  font-weight: 600;
+}
+
+#hubspot-form-72hr .hs-form,
+#hubspot-form-72hr .hs-custom-form {
+  font-family: var(--font);
+}
+
+#hubspot-form-72hr .hs-button {
+  font-family: inherit;
+  border-radius: var(--radius-sm);
 }
 
 /* Fairy dust (hero CTA hover) */
