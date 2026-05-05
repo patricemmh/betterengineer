@@ -1,26 +1,31 @@
-# BetterEngineer — React landing (static)
+# BetterEngineer — static site
 
-Static HTML/CSS/JS version of the React staffing landing page. No build step.
+This repository is **plain static assets**: HTML with **embedded CSS**, **vanilla JavaScript** (`home.js`, `react-page.js`), and local `icons/` / `images/`. There is **no** React app, Vite, TypeScript, or SPA bundler for these pages.
+
+The **React staffing** URL is a marketing page (`react.html`); it is still static HTML/JS. It loads **HubSpot’s** embed script only for the intake form.
+
+## Editing workflow
+
+- **Source CSS**: `styles/brand.css`, `styles/react-landing.css`
+- **Page fragments**: `main-home.html`, `main-react.html`, `footer-full.html`
+- Regenerate root HTML with embedded styles:
+
+  ```bash
+  npm run build
+  ```
+
+  or `node build-pages.js`
 
 ## GitHub Pages
 
-1. Repository **Settings → Pages**
-2. Source: **Deploy from a branch**, branch **main**, folder **/ (root)**
-3. Site URL: `https://patricemmh.github.io/betterengineer/` (after the first deploy)
+Deploy the **repository root** (same layout as here): `index.html`, `react.html`, `*.js`, `styles/` if you keep it for rebuilds, `icons/`, `images/`.
 
 ## Local preview
 
-From this folder, run any static server, for example:
+Any static file server from this folder works, for example:
 
 ```bash
-npx serve .
+npm start
 ```
 
-Then open `http://localhost:3000`.
-
-## Contents
-
-- `index.html` — page markup
-- `styles.css` — design system + page styles
-- `script.js` — navigation, FAQ, scroll reveal, fairy-dust hover
-- `icons/`, `images/` — assets used on the page
+Then open [http://localhost:5173/](http://localhost:5173/) (or use `npx serve .` and the port it prints).

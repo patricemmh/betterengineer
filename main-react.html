@@ -68,12 +68,38 @@
     <section class="section" id="hubspot-test" aria-labelledby="hubspot-test-title">
       <div class="wrap">
         <div class="reveal hubspot-test-intro">
-          <p class="eyebrow">HubSpot embed test</p>
-          <h2 class="h2" id="hubspot-test-title">72-hour intake form <span class="accent">(live)</span></h2>
-          <p class="lead hubspot-test-note">Same form as <a href="https://www.betterengineer.com/hire-software-engineers-in-72-hours" rel="noopener noreferrer">hire-software-engineers-in-72-hours</a>. If submissions fail on localhost or GitHub Pages, add that hostname in HubSpot → form → <strong>domains</strong>.</p>
+          <p class="eyebrow">React intake</p>
+          <h2 class="h2" id="hubspot-test-title">Tell us what is blocked. We will respond in <span class="accent">under 72 hours</span>.</h2>
+          <p class="lead hubspot-test-note">This is a fully custom form experience. We submit your details directly to HubSpot in the background.</p>
         </div>
         <div class="hero-form__card react-hero-side-card hubspot-form-card reveal">
-          <div id="hubspot-form-72hr"></div>
+          <form id="react-intake-form" class="react-intake-form" novalidate>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="firstname">First name *</label>
+                <input id="firstname" name="firstname" type="text" autocomplete="given-name" required>
+              </div>
+              <div class="form-field">
+                <label for="lastname">Last name *</label>
+                <input id="lastname" name="lastname" type="text" autocomplete="family-name" required>
+              </div>
+              <div class="form-field form-field--full">
+                <label for="email">Work email *</label>
+                <input id="email" name="email" type="email" autocomplete="email" required>
+              </div>
+              <div class="form-field form-field--full">
+                <label for="message">Tell us about your hiring needs *</label>
+                <textarea id="message" name="message" rows="5" required placeholder="Tell us how we can help you"></textarea>
+              </div>
+            </div>
+            <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+            <input type="hidden" name="utm_content" id="utm_content" value="">
+            <input type="hidden" name="utm_medium" id="utm_medium" value="">
+            <input type="hidden" name="utm_source" id="utm_source" value="">
+            <p class="form-privacy-note">By submitting, you agree to be contacted about your staffing request. We do not sell your data.</p>
+            <button class="btn btn--primary react-intake-submit" type="submit">Send intake request</button>
+            <p id="react-intake-status" class="form-status" role="status" aria-live="polite"></p>
+          </form>
         </div>
       </div>
     </section>

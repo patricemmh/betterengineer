@@ -159,50 +159,186 @@
     });
   }
 
-  var HS_TARGET_ID = 'hubspot-form-72hr';
-  function mountHubSpot72() {
-    var el = document.getElementById(HS_TARGET_ID);
-    if (!el || !window.hbspt) return;
-    if (el.getAttribute('data-hs-injected')) return;
-    el.setAttribute('data-hs-injected', 'true');
-    function trimEmailFields($form) {
-      $form.find('input[name="email"], input[type="email"]').each(function () {
-        this.value = (this.value || '').trim();
-      });
+  var HS_PORTAL_ID = '8679235';
+  var HS_FORM_ID = '4431ddc0-7bea-46ba-939c-98c422756479';
+  var hsSubmitEndpoint = 'https://api.hsforms.com/submissions/v3/integration/submit/' + HS_PORTAL_ID + '/' + HS_FORM_ID;
+
+  function getCookie(name) {
+    var cookies = document.cookie ? document.cookie.split('; ') : [];
+    for (var i = 0; i < cookies.length; i++) {
+      var parts = cookies[i].split('=');
+      var key = parts.shift();
+      if (key === name) return decodeURIComponent(parts.join('='));
     }
-    window.hbspt.forms.create({
-      region: 'na1',
-      portalId: '8679235',
-      formId: '4431ddc0-7bea-46ba-939c-98c422756479',
-      target: '#' + HS_TARGET_ID,
-      onFormReady: function ($form) {
-        $form.find('input[name="email"], input[type="email"]').on('blur', function () {
-          this.value = (this.value || '').trim();
+    return '';
+  }
+
+  function setFieldError(field, isInvalid) {
+    if (!field) return;
+    field.setAttribute('aria-invalid', isInvalid ? 'true' : 'false');
+  }
+
+  function setStatus(el, message, kind) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.remove('is-success', 'is-error');
+    if (kind === 'success') el.classList.add('is-success');
+    if (kind === 'error') el.classList.add('is-error');
+  }
+
+  function getHubSpotErrorMessage(data) {
+    if (!data) return '';
+    if (data.errors && data.errors.length && data.errors[0] && data.errors[0].message) {
+      return data.errors[0].message;
+    }
+    if (data.validationResults && data.validationResults.length && data.validationResults[0].message) {
+      return data.validationResults[0].message;
+    }
+    if (data.message) return data.message;
+    return '';
+  }
+
+  function wireReactIntakeForm() {
+    var form = document.getElementById('react-intake-form');
+    if (!form) return;
+    var status = document.getElementById('react-intake-status');
+    var utmKeys = ['utm_campaign', 'utm_content', 'utm_medium', 'utm_source'];
+    var params = new URLSearchParams(window.location.search || '');
+
+    utmKeys.forEach(function (key) {
+      var queryValue = (params.get(key) || '').trim();
+      var storedValue = '';
+      try {
+        storedValue = window.sessionStorage.getItem(key) || '';
+      } catch (e) {
+        storedValue = '';
+      }
+      var finalValue = queryValue || storedValue || '';
+      var field = form.querySelector('[name="' + key + '"]');
+      if (field) field.value = finalValue;
+      if (queryValue) {
+        try {
+          window.sessionStorage.setItem(key, queryValue);
+        } catch (e) {
+          // Ignore storage access failures.
+        }
+      }
+    });
+
+    var requiredFields = Array.prototype.slice.call(form.querySelectorAll('[required]'));
+    requiredFields.forEach(function (field) {
+      field.addEventListener('input', function () {
+        setFieldError(field, !field.value.trim());
+      });
+      field.addEventListener('blur', function () {
+        setFieldError(field, !field.value.trim());
+      });
+    });
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      setStatus(status, '', '');
+
+      var formData = new FormData(form);
+      var values = {
+        firstname: (formData.get('firstname') || '').trim(),
+        lastname: (formData.get('lastname') || '').trim(),
+        email: (formData.get('email') || '').trim(),
+        message: (formData.get('message') || '').trim(),
+        utm_campaign: (formData.get('utm_campaign') || '').trim(),
+        utm_content: (formData.get('utm_content') || '').trim(),
+        utm_medium: (formData.get('utm_medium') || '').trim(),
+        utm_source: (formData.get('utm_source') || '').trim(),
+      };
+
+      var hasError = false;
+      requiredFields.forEach(function (field) {
+        var val = (values[field.name] || '').trim();
+        var invalid = !val;
+        setFieldError(field, invalid);
+        if (invalid) hasError = true;
+      });
+      if (hasError) {
+        setStatus(status, 'Please complete all required fields before submitting.', 'error');
+        return;
+      }
+
+      var emailField = form.querySelector('[name="email"]');
+      var looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email);
+      if (!looksLikeEmail) {
+        setFieldError(emailField, true);
+        setStatus(status, 'Please enter a valid work email address.', 'error');
+        return;
+      }
+
+      var fields = [
+        { name: 'firstname', value: values.firstname },
+        { name: 'lastname', value: values.lastname },
+        { name: 'email', value: values.email },
+        { name: 'message', value: values.message },
+      ];
+
+      utmKeys.forEach(function (key) {
+        if (values[key]) fields.push({ name: key, value: values[key] });
+      });
+
+      var context = {
+        pageUri: window.location.href,
+        pageName: document.title,
+      };
+      var hutk = getCookie('hubspotutk');
+      if (hutk) {
+        context.hutk = hutk;
+      }
+
+      var payload = {
+        fields: fields,
+        context: context,
+      };
+
+      form.classList.add('is-submitting');
+      form.setAttribute('aria-busy', 'true');
+      var submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+
+      fetch(hsSubmitEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+        .then(function (res) {
+          if (res.ok) return null;
+          return res.json()
+            .then(function (data) { return data; })
+            .catch(function () { return null; })
+            .then(function (data) {
+              var error = new Error('HubSpot submission failed.');
+              error.data = data;
+              throw error;
+            });
+        })
+        .then(function () {
+          form.reset();
+          requiredFields.forEach(function (field) { setFieldError(field, false); });
+          setStatus(status, 'Thanks. Your request was sent. A staffing specialist will contact you shortly.', 'success');
+        })
+        .catch(function (err) {
+          var genericMessage = 'We could not submit right now. Please try again in a moment.';
+          var hubspotMessage = err && err.data ? getHubSpotErrorMessage(err.data) : '';
+          if (hubspotMessage) {
+            genericMessage = hubspotMessage;
+          }
+          setStatus(status, genericMessage, 'error');
+        })
+        .finally(function () {
+          form.classList.remove('is-submitting');
+          form.removeAttribute('aria-busy');
+          if (submitButton) submitButton.disabled = false;
         });
-      },
-      onFormSubmit: function ($form) {
-        trimEmailFields($form);
-      },
     });
   }
-  var hsSrc = 'https://js.hsforms.net/forms/embed/v2.js';
-  var hsScript = document.querySelector('script[src="' + hsSrc + '"]');
-  if (document.getElementById(HS_TARGET_ID)) {
-    if (!hsScript) {
-      hsScript = document.createElement('script');
-      hsScript.src = hsSrc;
-      hsScript.charset = 'utf-8';
-      hsScript.async = true;
-      hsScript.onload = function () {
-        requestAnimationFrame(mountHubSpot72);
-      };
-      document.body.appendChild(hsScript);
-    } else if (window.hbspt) {
-      requestAnimationFrame(mountHubSpot72);
-    } else {
-      hsScript.addEventListener('load', function () {
-        requestAnimationFrame(mountHubSpot72);
-      }, { once: true });
-    }
-  }
+
+  wireReactIntakeForm();
 })();

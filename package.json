@@ -1,0 +1,8 @@
+{
+  "name": "betterengineer",
+  "private": true,
+  "scripts": {
+    "build": "node build-pages.js",
+    "start": "npx --yes serve . -l 5173"
+  }
+}
