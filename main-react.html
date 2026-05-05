@@ -22,18 +22,36 @@
           </div>
         </div>
         <div class="hero-visual reveal">
-          <div class="hero-form__card react-hero-side-card">
-            <p class="eyebrow" style="margin-bottom:0.5rem">Why teams borrow our bench</p>
-            <h2 class="hero-form__title" style="font-size:1.25rem">React moves fast. Your roadmap should too.</h2>
-            <p class="hero-form__subtitle" style="margin-bottom:1.25rem">Product leaders come to us when a release train is at risk: legacy UI strangling velocity, a redesign that cannot stall revenue work, or a mobile-adjacent experience that needs disciplined component craft.</p>
-            <ul style="margin:0;padding-left:1.15rem;color:var(--color-muted);font-size:0.9375rem;line-height:1.55">
-              <li>Composable architecture reviews before engineers ever touch prod.</li>
-              <li style="margin-top:0.65rem">Smoke-tested onboarding so your first sprint shows progress, not paperwork.</li>
-              <li style="margin-top:0.65rem">Room to flex team size as initiatives land—without resetting trust with HR.</li>
-            </ul>
-            <div class="fairy-dust-wrap" id="fairy-dust-wrap">
-              <a class="btn btn--primary react-hero-card-cta" href="https://www.betterengineer.com/staff-augmentation" style="margin-top:1.35rem;width:100%">See how augmentation works</a>
-            </div>
+          <div class="hero-form__card react-hero-side-card react-intake-card">
+            <p class="eyebrow" style="margin-bottom:0.5rem">Get matched in under 72 hours</p>
+            <h2 class="hero-form__title" style="font-size:1.25rem">Tell us what is blocked and we will follow up fast.</h2>
+            <form id="react-intake-form" class="react-intake-form" novalidate>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="firstname">First name *</label>
+                  <input id="firstname" name="firstname" type="text" autocomplete="given-name" required>
+                </div>
+                <div class="form-field">
+                  <label for="lastname">Last name *</label>
+                  <input id="lastname" name="lastname" type="text" autocomplete="family-name" required>
+                </div>
+                <div class="form-field form-field--full">
+                  <label for="email">Work email *</label>
+                  <input id="email" name="email" type="email" autocomplete="email" required>
+                </div>
+                <div class="form-field form-field--full">
+                  <label for="message">Tell us about your hiring needs *</label>
+                  <textarea id="message" name="message" rows="3" required placeholder="Tell us how we can help you"></textarea>
+                </div>
+              </div>
+              <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+              <input type="hidden" name="utm_content" id="utm_content" value="">
+              <input type="hidden" name="utm_medium" id="utm_medium" value="">
+              <input type="hidden" name="utm_source" id="utm_source" value="">
+              <p class="form-privacy-note">By submitting, you agree to be contacted about your request.</p>
+              <button class="btn btn--primary react-intake-submit" type="submit">Send intake request</button>
+              <p id="react-intake-status" class="form-status" role="status" aria-live="polite"></p>
+            </form>
           </div>
         </div>
       </div>
@@ -65,41 +83,22 @@
       </div>
     </section>
 
-    <section class="section" id="hubspot-test" aria-labelledby="hubspot-test-title">
-      <div class="wrap">
-        <div class="reveal hubspot-test-intro">
-          <p class="eyebrow">React intake</p>
-          <h2 class="h2" id="hubspot-test-title">Tell us what is blocked. We will respond in <span class="accent">under 72 hours</span>.</h2>
-          <p class="lead hubspot-test-note">This is a fully custom form experience. We submit your details directly to HubSpot in the background.</p>
+    <section class="section section-tint" id="react-bench" aria-labelledby="react-bench-title">
+      <div class="wrap react-bench-grid">
+        <div class="reveal">
+          <p class="eyebrow">Why teams borrow our bench</p>
+          <h2 class="h2" id="react-bench-title">React moves fast. Your roadmap should too.</h2>
+          <p class="lead" style="margin-bottom:0">Product leaders come to us when a release train is at risk: legacy UI strangling velocity, a redesign that cannot stall revenue work, or a mobile-adjacent experience that needs disciplined component craft.</p>
         </div>
         <div class="hero-form__card react-hero-side-card hubspot-form-card reveal">
-          <form id="react-intake-form" class="react-intake-form" novalidate>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="firstname">First name *</label>
-                <input id="firstname" name="firstname" type="text" autocomplete="given-name" required>
-              </div>
-              <div class="form-field">
-                <label for="lastname">Last name *</label>
-                <input id="lastname" name="lastname" type="text" autocomplete="family-name" required>
-              </div>
-              <div class="form-field form-field--full">
-                <label for="email">Work email *</label>
-                <input id="email" name="email" type="email" autocomplete="email" required>
-              </div>
-              <div class="form-field form-field--full">
-                <label for="message">Tell us about your hiring needs *</label>
-                <textarea id="message" name="message" rows="5" required placeholder="Tell us how we can help you"></textarea>
-              </div>
-            </div>
-            <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
-            <input type="hidden" name="utm_content" id="utm_content" value="">
-            <input type="hidden" name="utm_medium" id="utm_medium" value="">
-            <input type="hidden" name="utm_source" id="utm_source" value="">
-            <p class="form-privacy-note">By submitting, you agree to be contacted about your staffing request. We do not sell your data.</p>
-            <button class="btn btn--primary react-intake-submit" type="submit">Send intake request</button>
-            <p id="react-intake-status" class="form-status" role="status" aria-live="polite"></p>
-          </form>
+          <ul style="margin:0;padding-left:1.15rem;color:var(--color-muted);font-size:0.99rem;line-height:1.65">
+            <li>Composable architecture reviews before engineers ever touch prod.</li>
+            <li style="margin-top:0.7rem">Smoke-tested onboarding so your first sprint shows progress, not paperwork.</li>
+            <li style="margin-top:0.7rem">Room to flex team size as initiatives land without resetting trust with HR.</li>
+          </ul>
+          <div class="fairy-dust-wrap" id="fairy-dust-wrap">
+            <a class="btn btn--primary react-hero-card-cta" href="https://www.betterengineer.com/staff-augmentation" style="margin-top:1.35rem;width:100%">See how augmentation works</a>
+          </div>
         </div>
       </div>
     </section>
