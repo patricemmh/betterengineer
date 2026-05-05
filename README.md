@@ -18,7 +18,17 @@ The **React staffing** URL is a marketing page (`react.html`); it is still stati
 
 ## GitHub Pages
 
-Deploy the **repository root** (same layout as here): `index.html`, `react.html`, `*.js`, `styles/` if you keep it for rebuilds, `icons/`, `images/`.
+Deploy from the **`main` branch root**. This repo writes:
+
+- `index.html` -> `/`
+- `technologies/react/index.html` -> `/technologies/react`
+
+It also writes:
+
+- `CNAME` with `lp.betterengineer.com`
+- `.nojekyll`
+
+Use root-relative assets (`/icons/...`, `/images/...`) so nested routes work on GitHub Pages.
 
 ## Local preview
 

@@ -173,6 +173,72 @@
     return '';
   }
 
+  var HS_UTM_KEYS = ['utm_campaign', 'utm_content', 'utm_medium', 'utm_source', 'utm_term', 'utm_id'];
+
+  function safeSessionGet(key) {
+    try {
+      return window.sessionStorage.getItem(key) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function safeSessionSet(key, value) {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (e) {
+      // Ignore storage access failures.
+    }
+  }
+
+  function captureAttribution() {
+    var params = new URLSearchParams(window.location.search || '');
+    HS_UTM_KEYS.forEach(function (key) {
+      var value = (params.get(key) || '').trim();
+      if (value) safeSessionSet(key, value);
+    });
+
+    var landing = safeSessionGet('hs_landing_page');
+    if (!landing) safeSessionSet('hs_landing_page', window.location.href);
+
+    var referrer = (document.referrer || '').trim();
+    if (referrer && !safeSessionGet('hs_original_referrer')) {
+      safeSessionSet('hs_original_referrer', referrer);
+    }
+  }
+
+  function getHsqQueue() {
+    window._hsq = window._hsq || [];
+    return window._hsq;
+  }
+
+  function sanitizeEventName(raw) {
+    return (raw || 'interaction')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 64) || 'interaction';
+  }
+
+  function trackVirtualView(eventName) {
+    var q = getHsqQueue();
+    var basePath = window.location.pathname || '/';
+    q.push(['setPath', basePath + '?hs_evt=' + sanitizeEventName(eventName)]);
+    q.push(['trackPageView']);
+    q.push(['setPath', window.location.pathname + window.location.search]);
+  }
+
+  function bindHubSpotClickTracking() {
+    document.addEventListener('click', function (e) {
+      var target = e.target.closest('a.btn, a.btn-nav, button.btn');
+      if (!target) return;
+      var explicitName = target.getAttribute('data-hs-event');
+      var textName = (target.textContent || '').trim();
+      var eventName = explicitName || ('cta_' + textName);
+      trackVirtualView(eventName);
+    });
+  }
+
   function setFieldError(field, isInvalid) {
     if (!field) return;
     field.setAttribute('aria-invalid', isInvalid ? 'true' : 'false');
@@ -207,25 +273,22 @@
 
     utmKeys.forEach(function (key) {
       var queryValue = (params.get(key) || '').trim();
-      var storedValue = '';
-      try {
-        storedValue = window.sessionStorage.getItem(key) || '';
-      } catch (e) {
-        storedValue = '';
-      }
+      var storedValue = safeSessionGet(key);
       var finalValue = queryValue || storedValue || '';
       var field = form.querySelector('[name="' + key + '"]');
       if (field) field.value = finalValue;
       if (queryValue) {
-        try {
-          window.sessionStorage.setItem(key, queryValue);
-        } catch (e) {
-          // Ignore storage access failures.
-        }
+        safeSessionSet(key, queryValue);
       }
     });
 
     var requiredFields = Array.prototype.slice.call(form.querySelectorAll('[required]'));
+    var formStartedTracked = false;
+    form.addEventListener('input', function () {
+      if (formStartedTracked) return;
+      formStartedTracked = true;
+      trackVirtualView('react_form_started');
+    });
     requiredFields.forEach(function (field) {
       field.addEventListener('input', function () {
         setFieldError(field, !field.value.trim());
@@ -323,6 +386,7 @@
           form.reset();
           requiredFields.forEach(function (field) { setFieldError(field, false); });
           setStatus(status, 'Thanks. Your request was sent. A staffing specialist will contact you shortly.', 'success');
+          trackVirtualView('react_form_submit_success');
         })
         .catch(function (err) {
           var genericMessage = 'We could not submit right now. Please try again in a moment.';
@@ -331,6 +395,7 @@
             genericMessage = hubspotMessage;
           }
           setStatus(status, genericMessage, 'error');
+          trackVirtualView('react_form_submit_error');
         })
         .finally(function () {
           form.classList.remove('is-submitting');
@@ -340,5 +405,7 @@
     });
   }
 
+  captureAttribution();
+  bindHubSpotClickTracking();
   wireReactIntakeForm();
 })();

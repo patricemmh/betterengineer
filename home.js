@@ -4,6 +4,75 @@
   var reduceMotion =
     typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  var HS_UTM_KEYS = ['utm_campaign', 'utm_content', 'utm_medium', 'utm_source', 'utm_term', 'utm_id'];
+
+  function safeSessionGet(key) {
+    try {
+      return window.sessionStorage.getItem(key) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function safeSessionSet(key, value) {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (e) {
+      // Ignore storage access failures.
+    }
+  }
+
+  function captureAttribution() {
+    var params = new URLSearchParams(window.location.search || '');
+    HS_UTM_KEYS.forEach(function (key) {
+      var value = (params.get(key) || '').trim();
+      if (value) safeSessionSet(key, value);
+    });
+
+    var landing = safeSessionGet('hs_landing_page');
+    if (!landing) safeSessionSet('hs_landing_page', window.location.href);
+
+    var referrer = (document.referrer || '').trim();
+    if (referrer && !safeSessionGet('hs_original_referrer')) {
+      safeSessionSet('hs_original_referrer', referrer);
+    }
+  }
+
+  function getHsqQueue() {
+    window._hsq = window._hsq || [];
+    return window._hsq;
+  }
+
+  function sanitizeEventName(raw) {
+    return (raw || 'interaction')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 64) || 'interaction';
+  }
+
+  function trackVirtualView(eventName) {
+    var q = getHsqQueue();
+    var basePath = window.location.pathname || '/';
+    q.push(['setPath', basePath + '?hs_evt=' + sanitizeEventName(eventName)]);
+    q.push(['trackPageView']);
+    q.push(['setPath', window.location.pathname + window.location.search]);
+  }
+
+  function bindHubSpotClickTracking() {
+    document.addEventListener('click', function (e) {
+      var target = e.target.closest('a.btn, a.btn-nav, button.btn');
+      if (!target) return;
+      var explicitName = target.getAttribute('data-hs-event');
+      var textName = (target.textContent || '').trim();
+      var eventName = explicitName || ('cta_' + textName);
+      trackVirtualView(eventName);
+    });
+  }
+
+  captureAttribution();
+  bindHubSpotClickTracking();
+
   var header = document.getElementById('header');
   if (header) {
     window.addEventListener(
