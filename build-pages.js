@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 
 var root = __dirname;
-var cursorStyles = path.join(root, '..', 'betterengineer-cursor-website', 'src', 'styles');
+var styleDir = path.join(root, 'styles');
 
 function fixUrls(css) {
   return css
@@ -13,8 +13,8 @@ function fixUrls(css) {
 }
 
 function readStyles() {
-  var brandPath = path.join(cursorStyles, 'brand.css');
-  var reactPath = path.join(cursorStyles, 'react-landing.css');
+  var brandPath = path.join(styleDir, 'brand.css');
+  var reactPath = path.join(styleDir, 'react-landing.css');
   if (!fs.existsSync(brandPath)) {
     console.error('Missing brand.css at', brandPath);
     process.exit(1);
