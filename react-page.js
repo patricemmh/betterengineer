@@ -165,11 +165,24 @@
     if (!el || !window.hbspt) return;
     if (el.getAttribute('data-hs-injected')) return;
     el.setAttribute('data-hs-injected', 'true');
+    function trimEmailFields($form) {
+      $form.find('input[name="email"], input[type="email"]').each(function () {
+        this.value = (this.value || '').trim();
+      });
+    }
     window.hbspt.forms.create({
       region: 'na1',
       portalId: '8679235',
       formId: '4431ddc0-7bea-46ba-939c-98c422756479',
       target: '#' + HS_TARGET_ID,
+      onFormReady: function ($form) {
+        $form.find('input[name="email"], input[type="email"]').on('blur', function () {
+          this.value = (this.value || '').trim();
+        });
+      },
+      onFormSubmit: function ($form) {
+        trimEmailFields($form);
+      },
     });
   }
   var hsSrc = 'https://js.hsforms.net/forms/embed/v2.js';
